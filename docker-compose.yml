@@ -5,21 +5,19 @@ services:
     environment:
       POSTGRES_DB: devops_app
       POSTGRES_USER: devops_user
-      POSTGRES_PASSWORD: azim789654
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   web:
     build: .
     environment:
-      DATABASE_URL: postgresql://devops_user:azim789654@db:5432/devops_app
-      SECRET_KEY: devops-production-secret
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
     depends_on:
       - db
     expose:
       - "5000"
-    volumes:
-      - .:/app
 
   nginx:
     image: nginx:alpine
