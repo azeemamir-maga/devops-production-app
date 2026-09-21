@@ -1,28 +1,47 @@
+# ==============================
+# Stage 1: Builder
+# ==============================
+
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+
+# Make virtual environment the default Python environment
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy dependency file
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+# ==============================
+# Stage 2: Production
+# ==============================
+
 FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 
-COPY requirements.txt .
+# Make virtual environment the default
+ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
-
+# Copy application
 COPY . .
 
-# Create a non-root application user
-RUN useradd --create-home --shell /bin/bash appuser \
-    && chown -R appuser:appuser /app
+# Create non-root user
+RUN useradd --create-home appuser
 
 # Run application as non-root user
 USER appuser
 
 EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
-
-CMD ["python", "-m", "flask", "--app", "app:create_app", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["flask", "--app", "app:create_app", "run", "--host=0.0.0.0", "--port=5000"]
