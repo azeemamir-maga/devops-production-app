@@ -32,8 +32,9 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Make virtual environment the default
 ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONPATH="/app"
 
-# Copy application
+# Copy application and tests
 COPY . .
 
 # Create non-root user
