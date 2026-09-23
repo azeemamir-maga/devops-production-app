@@ -55,4 +55,4 @@ jobs:
           DATABASE_URL: postgresql://devops_user:devops_test_password@localhost:5432/devops_app
           SECRET_KEY: ci-test-secret
         run: |
-          pytest -v
+          python -m pytest -v
