@@ -1,262 +1,359 @@
 # DevOps Production App
 
-A Production-Style Flask Web Application Built With Docker, PostgreSQL, And Nginx.
+A production-style Flask web application deployed with Docker, PostgreSQL, and Nginx, featuring automated testing and CI/CD-driven Docker image publishing through GitHub Actions.
 
-This Project Demonstrates How A Python Web Application Can Be Containerized, Connected To A PostgreSQL Database, Served Through An Nginx Reverse Proxy, Tested, And Prepared For CI/CD With GitHub Actions.
+This project demonstrates a complete, practical DevOps workflow: containerizing a Python web application, connecting it to a PostgreSQL database, placing Nginx in front of it as a reverse proxy, persisting database data with Docker volumes, running automated tests, hardening the container, optimizing the Docker image, and publishing the final image to Docker Hub through a CI/CD pipeline.
+
+---
+
+## Table of Contents
+
+- [Architecture](#architecture)
+- [CI/CD Workflow](#cicd-workflow)
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Docker Hub Image](#docker-hub-image)
+- [Testing](#testing)
+- [Health Check](#health-check)
+- [Database](#database)
+- [Nginx](#nginx)
+- [Security](#security)
+- [Useful Docker Commands](#useful-docker-commands)
+- [DevOps Concepts Demonstrated](#devops-concepts-demonstrated)
+- [Project Goal](#project-goal)
+- [Author](#author)
+- [License](#license)
+
+---
 
 ## Architecture
 
 ```text
-                    USER
-                      |
-                      v
-                 NGINX :80
-                      |
-                      v
-              FLASK WEB :5000
-                      |
-                      v
-              POSTGRESQL :5432
-                      |
-                      v
-               postgres_data
+                         USER
+                           |
+                           v
+                     NGINX :80
+                           |
+                           v
+                    FLASK WEB :5000
+                           |
+                           v
+                    POSTGRESQL :5432
+                           |
+                           v
+                    postgres_data
+                    (named volume)
 ```
+
+**Request flow:** `Client → Nginx :80 → Flask :5000 → PostgreSQL :5432 → Persistent Volume`
+
+The Flask application is never exposed directly to the host. Nginx is the only public HTTP entry point and forwards requests to Flask internally.
+
+---
+
+## CI/CD Workflow
+
+```text
+Developer
+    |
+    v
+Git Push
+    |
+    v
+GitHub Actions
+    |
+    +--> Install Dependencies
+    +--> Start PostgreSQL Service
+    +--> Run Database Migrations
+    +--> Run Pytest
+    +--> Build Docker Image
+    +--> Authenticate with Docker Hub
+    +--> Push Docker Image
+    |
+    v
+Docker Hub
+    |
+    v
+Docker Compose
+    |
+    +--> Nginx
+    +--> Flask
+    +--> PostgreSQL
+```
+
+The pipeline runs on every push to `master` and on every pull request targeting `master`.
+
+---
 
 ## Tech Stack
 
-* Python
-* Flask
-* SQLAlchemy
-* PostgreSQL 16
-* Docker
-* Docker Compose
-* Nginx
-* GitHub Actions
-* Docker Hub
-* Linux / Ubuntu
+| Category         | Tools |
+|-------------------|-------|
+| Language / Framework | Python 3, Flask |
+| Database           | PostgreSQL 16, SQLAlchemy, Flask-Migrate |
+| Containerization   | Docker, Docker Compose |
+| Web Server / Proxy | Nginx |
+| CI/CD              | GitHub Actions, Docker Hub |
+| Testing            | Pytest |
+| Version Control     | Git, GitHub |
+| OS                 | Linux / Ubuntu |
+
+---
 
 ## Features
 
-* Flask Application Factory
-* PostgreSQL Database
-* CRUD API
-* Database Migrations
-* Dockerized Flask Application
-* Docker Compose Multi-Container Architecture
-* Nginx Reverse Proxy
-* Application Health Check
-* Persistent PostgreSQL Storage
-* Non-Root Application Container
-* Automated Testing
-* CI/CD Pipeline
-* Docker Image Optimization
+- Flask application factory pattern
+- PostgreSQL database integration
+- CRUD API
+- Database migrations with Flask-Migrate
+- Dockerized Flask application
+- Multi-container architecture via Docker Compose
+- Nginx reverse proxy
+- Application health endpoint
+- Persistent PostgreSQL storage via named volume
+- Non-root application container
+- Environment-based configuration
+- Automated testing with Pytest
+- GitHub Actions CI/CD pipeline
+- Automated Docker Hub image publishing
+- Optimized, production-oriented Docker image
+
+---
 
 ## Project Structure
 
 ```text
 devops-production-app/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 ├── app/
+│   ├── __init__.py
+│   └── main.py
 ├── migrations/
+│   ├── versions/
+│   ├── alembic.ini
+│   ├── env.py
+│   └── script.py.mako
 ├── nginx/
+│   └── nginx.conf
 ├── tests/
-├── docker/
+│   ├── conftest.py
+│   └── test_app.py
+├── .dockerignore
+├── .env.example
+├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
-├── README.md
 ├── LICENSE
-└── .gitignore
+├── README.md
+├── models.py
+└── requirements.txt
 ```
 
-## Run Locally
+---
 
-### 1. Clone The Repository
+## Getting Started
+
+### 1. Clone the repository
 
 ```bash
 git clone <YOUR-GITHUB-REPOSITORY-URL>
 cd devops-production-app
 ```
 
-### 2. Start The Application
+### 2. Configure environment variables
+
+Create your local environment file from the example:
 
 ```bash
-docker compose up --build -d
+cp .env.example .env
 ```
 
-### 3. Check Running Containers
+Update `.env` with your local configuration.
+
+> **Note:** Never commit `.env` to Git. Secrets and passwords must stay out of the repository.
+
+### 3. Start the application
+
+The production-style Compose configuration pulls the published Docker Hub image:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+### 4. Verify running containers
 
 ```bash
 docker compose ps
 ```
 
-### 4. Check Application Health
+Expected services: `db`, `web`, `nginx`
+
+### 5. Check application health
 
 ```bash
 curl http://localhost/health
 ```
 
-Expected Response:
+Expected response:
 
 ```json
-{"status":"healthy"}
+{"status": "healthy"}
 ```
 
-### 5. Open The Application
-
-Open:
+### 6. Open the application
 
 ```text
 http://localhost
 ```
 
-## Useful Docker Commands
+---
 
-View Running Containers:
+## Docker Hub Image
 
-```bash
-docker compose ps
+The application image is published to Docker Hub:
+
+```text
+azeemamir/devops-production-app:latest
 ```
 
-View Logs:
+Pull it manually with:
 
 ```bash
-docker compose logs -f
+docker pull azeemamir/devops-production-app:latest
 ```
 
-View Web Application Logs:
+The Compose configuration uses this published image for the Flask web service.
 
-```bash
-docker compose logs -f web
-```
-
-View Nginx Logs:
-
-```bash
-docker compose logs -f nginx
-```
-
-Stop The Application:
-
-```bash
-docker compose down
-```
-
-Stop The Application And Remove Database Volume:
-
-```bash
-docker compose down -v
-```
+---
 
 ## Testing
 
-Run The Test Suite Inside The Web Container:
+Run the test suite inside the running web container:
 
 ```bash
-docker compose exec web pytest
+docker compose exec web pytest -v
 ```
 
-## Health Check
+The GitHub Actions pipeline also runs the full automated test suite before publishing a new Docker image.
 
-The Application Provides A Health Endpoint:
+---
+
+## Health Check
 
 ```text
 GET /health
 ```
 
-Example:
-
 ```bash
 curl http://localhost/health
 ```
 
-Response:
+Expected response:
 
 ```json
-{"status":"healthy"}
+{"status": "healthy"}
 ```
 
-This Endpoint Can Be Used To Verify That The Application Is Running Correctly.
+This endpoint provides a simple, standard way to verify that the application is running correctly — useful for uptime checks, load balancers, and orchestration health probes.
+
+---
 
 ## Database
 
-The Application Uses PostgreSQL 16 For Persistent Data Storage.
+The application uses **PostgreSQL 16**, with data persisted in a named Docker volume: `postgres_data`.
 
-Docker Compose Provides A Named Volume:
+Stop the application without deleting the database volume:
 
-```text
-postgres_data
+```bash
+docker compose down
 ```
 
-This Allows PostgreSQL Data To Persist Across Container Restarts.
+Stop the application **and** remove the database volume:
+
+```bash
+docker compose down -v
+```
+
+> **Warning:** Removing the volume permanently deletes the PostgreSQL data stored in it.
+
+---
 
 ## Nginx
 
-Nginx Acts As A Reverse Proxy In Front Of The Flask Application.
-
-The Request Flow Is:
+Nginx sits in front of the Flask application as a reverse proxy:
 
 ```text
-Client
-  ↓
-Nginx :80
-  ↓
-Flask :5000
-  ↓
-PostgreSQL :5432
+Client → Nginx :80 → Flask :5000 → PostgreSQL :5432
 ```
 
-The Flask Application Is Not Directly Exposed To The Host. Nginx Provides The Public HTTP Entry Point.
+Flask is kept behind Nginx rather than being exposed directly as the public endpoint, which allows for centralized routing, buffering, and (in a real production deployment) TLS termination and load balancing.
+
+---
 
 ## Security
 
-The Application Container Runs Using A Non-Root User.
+- The Flask container runs as a **non-root user**.
+- Sensitive configuration is provided through environment variables, not hardcoded values.
+- `.env` is excluded from Git via `.gitignore`.
+- `.dockerignore` keeps unnecessary files out of the Docker build context.
+- No secrets, passwords, API keys, or access tokens are stored in the repository.
+- The application image has been optimized to minimize unnecessary contents and reduce attack surface.
 
-Environment Variables Are Used For Configuration And Sensitive Values.
+---
 
-The `.env` File Is Excluded From Git Using `.gitignore`.
+## Useful Docker Commands
 
-Never Commit Passwords, API Keys, Tokens, Or Other Secrets To The Repository.
+| Command | Description |
+|---|---|
+| `docker compose ps` | View running containers |
+| `docker compose logs -f` | View all container logs |
+| `docker compose logs -f web` | View Flask logs |
+| `docker compose logs -f nginx` | View Nginx logs |
+| `docker compose logs -f db` | View PostgreSQL logs |
+| `docker compose pull` | Pull the latest image |
+| `docker compose up -d` | Start / restart the application |
+| `docker compose down` | Stop the application |
+
+---
 
 ## DevOps Concepts Demonstrated
 
-This Project Demonstrates Practical Experience With:
+This project demonstrates hands-on, practical experience with:
 
-* Linux
-* Git And GitHub
-* Docker
-* Docker Compose
-* Container Networking
-* Docker Volumes
-* PostgreSQL
-* Flask
-* Nginx
-* Health Checks
-* Container Security
-* Automated Testing
-* CI/CD
-* Docker Image Optimization
+- Linux, Git, and GitHub
+- Docker and Docker Compose
+- Container networking and volumes
+- PostgreSQL and database migrations
+- Flask application development
+- Nginx reverse proxying
+- Health checks and logging
+- Container security and non-root containers
+- Automated testing
+- GitHub Actions CI/CD
+- Docker Hub image publishing
+- Docker image optimization
 
-## CI/CD
-
-GitHub Actions Is Used To Automate The Software Delivery Workflow.
-
-The CI/CD Pipeline Can:
-
-1. Check Out The Repository
-2. Install Dependencies
-3. Run Tests
-4. Build The Docker Image
-5. Authenticate With Docker Hub
-6. Push The Docker Image
+---
 
 ## Project Goal
 
-The Goal Of This Project Is To Demonstrate How A Traditional Web Application Can Be Transformed Into A Containerized, Tested, And Deployment-Ready DevOps Project.
+The goal of this project is to demonstrate how a traditional Python web application can be transformed into a containerized, tested, secured, and deployment-ready application using practical, industry-standard DevOps tools and workflows — from local development through to automated CI/CD delivery.
+
+---
 
 ## Author
 
 **Azeem Amir**
-
 DevOps Engineer / Cloud & Automation Enthusiast
+GitHub: [`azeemamir-maga`](https://github.com/azeemamir-maga)
 
-GitHub: `azeemamir-maga`
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
