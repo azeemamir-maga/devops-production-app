@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DevOps Production App | Azeem Amir</title>
+
+    <meta
+        name="description"
+        content="Production-style Flask application demonstrating Docker, PostgreSQL, Nginx, automated testing, and GitHub Actions CI/CD."
+    >
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #07111f;
+            color: #e6edf7;
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .container {
+            width: min(1120px, 92%);
+            margin: auto;
+        }
+
+        /* Navigation */
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 17, 31, 0.95);
+            border-bottom: 1px solid #1d3048;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-inner {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .brand span {
+            color: #58a6ff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            font-size: 14px;
+            color: #9fb3c8;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        /* Hero */
+
+        .hero {
+            padding: 110px 0 90px;
+            text-align: center;
+            border-bottom: 1px solid #1d3048;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 14px;
+            margin-bottom: 25px;
+            border: 1px solid #28527d;
+            border-radius: 999px;
+            color: #58a6ff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: clamp(42px, 7vw, 76px);
+            line-height: 1.05;
+            margin-bottom: 25px;
+            letter-spacing: -2px;
+        }
+
+        .hero h1 span {
+            color: #58a6ff;
+        }
+
+        .hero p {
+            max-width: 760px;
+            margin: auto;
+            color: #a9bacd;
+            font-size: 19px;
+        }
+
+        .buttons {
+            margin-top: 35px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            padding: 13px 22px;
+            border-radius: 8px;
+            font-weight: 700;
+            border: 1px solid #315577;
+            background: #0d2137;
+        }
+
+        .button.primary {
+            background: #238636;
+            border-color: #238636;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Sections */
+
+        section {
+            padding: 85px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 34px;
+            margin-bottom: 10px;
+        }
+
+        .section-title p {
+            color: #91a4b8;
+        }
+
+        /* Architecture */
+
+        .architecture {
+            background: #091727;
+        }
+
+        .architecture-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .architecture-box {
+            min-width: 155px;
+            padding: 22px 18px;
+            text-align: center;
+            background: #0d1e32;
+            border: 1px solid #27445f;
+            border-radius: 10px;
+        }
+
+        .architecture-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .architecture-box small {
+            color: #7f96ad;
+        }
+
+        .arrow {
+            font-size: 25px;
+            color: #58a6ff;
+        }
+
+        .volume {
+            margin: 30px auto 0;
+            max-width: 260px;
+            padding: 18px;
+            text-align: center;
+            border: 1px dashed #36536e;
+            border-radius: 10px;
+            color: #a9bacd;
+        }
+
+        /* Cards */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: #0b1a2b;
+            border: 1px solid #203951;
+            border-radius: 12px;
+            padding: 28px;
+        }
+
+        .card h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .card p {
+            color: #96aabd;
+            font-size: 15px;
+        }
+
+        .icon {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        /* Pipeline */
+
+        .pipeline {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pipeline-step {
+            padding: 18px 20px;
+            background: #0d1e32;
+            border: 1px solid #27445f;
+            border-radius: 9px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .pipeline-arrow {
+            color: #58a6ff;
+            font-size: 20px;
+        }
+
+        /* Tech */
+
+        .tech-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tech {
+            padding: 10px 17px;
+            background: #0d1e32;
+            border: 1px solid #29445d;
+            border-radius: 999px;
+            color: #c6d5e5;
+            font-size: 14px;
+        }
+
+        /* Metrics */
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-top: 35px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 25px;
+            background: #0b1a2b;
+            border: 1px solid #203951;
+            border-radius: 10px;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 30px;
+            color: #58a6ff;
+        }
+
+        .metric span {
+            color: #91a4b8;
+            font-size: 14px;
+        }
+
+        /* Project */
+
+        .project-box {
+            max-width: 850px;
+            margin: auto;
+            padding: 45px;
+            background: linear-gradient(135deg, #0d2137, #0a1727);
+            border: 1px solid #2b4d6c;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .project-box p {
+            color: #a5b7ca;
+            margin: 18px auto;
+            max-width: 680px;
+        }
+
+        /* Footer */
+
+        footer {
+            border-top: 1px solid #1d3048;
+            padding: 40px 0;
+            text-align: center;
+            color: #7f96ad;
+            font-size: 14px;
+        }
+
+        footer strong {
+            color: #dce8f5;
+        }
+
+        /* Responsive */
+
+        @media (max-width: 850px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .hero {
+                padding: 80px 0 65px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .project-box {
+                padding: 28px 20px;
+            }
+
+            .architecture-flow {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+
+    <nav>
+        <div class="container nav-inner">
+
+            <div class="brand">
+                Azeem <span>Amir</span>
+            </div>
+
+            <div class="nav-links">
+                <a href="#architecture">Architecture</a>
+                <a href="#pipeline">CI/CD</a>
+                <a href="#technology">Technology</a>
+                <a href="#project">Project</a>
+            </div>
+
+        </div>
+    </nav>
+
+
+    <!-- Hero -->
+
+    <header class="hero">
+
+        <div class="container">
+
+            <div class="badge">
+                DEVOPS PORTFOLIO PROJECT
+            </div>
+
+            <h1>
+                DevOps<br>
+                <span>Production App</span>
+            </h1>
+
+            <p>
+                A production-style Flask application demonstrating
+                containerization, PostgreSQL persistence, Nginx reverse
+                proxying, automated testing, and CI/CD with GitHub Actions.
+            </p>
+
+            <div class="buttons">
+
+                <a
+                    class="button primary"
+                    href="https://github.com/azeemamir-maga/devops-production-app"
+                    target="_blank"
+                >
+                    View GitHub
+                </a>
+
+                <a
+                    class="button"
+                    href="https://hub.docker.com/r/azeemamir/devops-production-app"
+                    target="_blank"
+                >
+                    Docker Hub
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- Architecture -->
+
+    <section id="architecture" class="architecture">
+
+        <div class="container">
+
+            <div class="section-title">
+
+                <h2>Application Architecture</h2>
+
+                <p>
+                    A multi-container application with a clear request path
+                    and persistent database storage.
+                </p>
+
+            </div>
+
+            <div class="architecture-flow">
+
+                <div class="architecture-box">
+                    <strong>USER</strong>
+                    <small>HTTP Request</small>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div class="architecture-box">
+                    <strong>NGINX</strong>
+                    <small>Port 80</small>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div class="architecture-box">
+                    <strong>FLASK</strong>
+                    <small>Port 5000</small>
+                </div>
+
+                <div class="arrow">→</div>
+
+                <div class="architecture-box">
+                    <strong>POSTGRESQL</strong>
+                    <small>Port 5432</small>
+                </div>
+
+            </div>
+
+            <div class="volume">
+                💾 Persistent Storage<br>
+                <strong>postgres_data</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CI/CD -->
+
+    <section id="pipeline">
+
+        <div class="container">
+
+            <div class="section-title">
+
+                <h2>CI/CD Pipeline</h2>
+
+                <p>
+                    Automated testing, container building, and Docker image publishing.
+                </p>
+
+            </div>
+
+            <div class="pipeline">
+
+                <div class="pipeline-step">Git Push</div>
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-step">GitHub Actions</div>
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-step">Install</div>
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-step">Migrations</div>
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-step">Pytest</div>
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-step">Docker Build</div>
+                <div class="pipeline-arrow">→</div>
+
+                <div class="pipeline-step">Docker Hub</div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Technology -->
+
+    <section id="technology" class="architecture">
+
+        <div class="container">
+
+            <div class="section-title">
+
+                <h2>Technology Stack</h2>
+
+                <p>
+                    Tools used to build, test, package, and deliver the application.
+                </p>
+
+            </div>
+
+            <div class="tech-list">
+
+                <div class="tech">Python</div>
+                <div class="tech">Flask</div>
+                <div class="tech">SQLAlchemy</div>
+                <div class="tech">PostgreSQL 16</div>
+                <div class="tech">Docker</div>
+                <div class="tech">Docker Compose</div>
+                <div class="tech">Nginx</div>
+                <div class="tech">Git</div>
+                <div class="tech">GitHub</div>
+                <div class="tech">GitHub Actions</div>
+                <div class="tech">Docker Hub</div>
+                <div class="tech">Pytest</div>
+                <div class="tech">Linux / Ubuntu</div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Capabilities -->
+
+    <section>
+
+        <div class="container">
+
+            <div class="section-title">
+
+                <h2>Production Practices Demonstrated</h2>
+
+                <p>
+                    Practical DevOps concepts implemented in the project.
+                </p>
+
+            </div>
+
+            <div class="grid">
+
+                <div class="card">
+                    <div class="icon">🐳</div>
+                    <h3>Containerization</h3>
+                    <p>
+                        Flask runs inside a dedicated Docker container
+                        with a production-oriented image configuration.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">🔄</div>
+                    <h3>CI/CD Automation</h3>
+                    <p>
+                        GitHub Actions automatically tests, builds,
+                        and publishes the application image.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">🔐</div>
+                    <h3>Container Security</h3>
+                    <p>
+                        The application container runs as a non-root user
+                        and sensitive configuration stays outside Git.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">💾</div>
+                    <h3>Persistent Storage</h3>
+                    <p>
+                        PostgreSQL data is stored using the named
+                        Docker volume postgres_data.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">🌐</div>
+                    <h3>Reverse Proxy</h3>
+                    <p>
+                        Nginx provides the public HTTP entry point
+                        and forwards requests to Flask.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">🧪</div>
+                    <h3>Automated Testing</h3>
+                    <p>
+                        Pytest and database migrations run as part
+                        of the CI pipeline.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Metrics -->
+
+    <section id="project" class="architecture">
+
+        <div class="container">
+
+            <div class="section-title">
+
+                <h2>Project Overview</h2>
+
+                <p>
+                    A complete hands-on DevOps project built from development
+                    through automated delivery.
+                </p>
+
+            </div>
+
+            <div class="metrics">
+
+                <div class="metric">
+                    <strong>3</strong>
+                    <span>Containers</span>
+                </div>
+
+                <div class="metric">
+                    <strong>1</strong>
+                    <span>CI/CD Pipeline</span>
+                </div>
+
+                <div class="metric">
+                    <strong>16</strong>
+                    <span>PostgreSQL Version</span>
+                </div>
+
+                <div class="metric">
+                    <strong>80</strong>
+                    <span>Public HTTP Port</span>
+                </div>
+
+            </div>
+
+
+            <div class="project-box" style="margin-top: 50px;">
+
+                <h2>
+                    Explore the Project
+                </h2>
+
+                <p>
+                    Review the source code, Docker configuration,
+                    CI/CD workflow, tests, database migrations,
+                    and production-oriented container architecture.
+                </p>
+
+                <div class="buttons">
+
+                    <a
+                        class="button primary"
+                        href="https://github.com/azeemamir-maga/devops-production-app"
+                        target="_blank"
+                    >
+                        GitHub Repository
+                    </a>
+
+                    <a
+                        class="button"
+                        href="https://hub.docker.com/r/azeemamir/devops-production-app"
+                        target="_blank"
+                    >
+                        Docker Hub Image
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Footer -->
+
+    <footer>
+
+        <div class="container">
+
+            <p>
+                Built by <strong>Azeem Amir</strong>
+            </p>
+
+            <p>
+                DevOps Engineer / Cloud & Automation Enthusiast
+            </p>
+
+            <p style="margin-top: 10px;">
+                © 2026 Azeem Amir · DevOps Production App
+            </p>
+
+        </div>
+
+    </footer>
+
+</body>
+</html>
